@@ -1,0 +1,60 @@
+name: Weight Difference Report
+
+on:
+  pull_request:
+    paths:
+        - 'runtime/moonbase/src/weights/**/*.rs'
+        - 'runtime/moonbase/src/weights/*.rs'
+        - 'runtime/moonriver/src/weights/**/*.rs'
+        - 'runtime/moonriver/src/weights/*.rs'
+        - 'runtime/moonbeam/src/weights/**/*.rs'
+        - 'runtime/moonbeam/src/weights/*.rs'
+
+
+jobs:
+    weight-diff:
+        runs-on: ubuntu-latest
+        steps:
+
+            - name: Get all test, doc and src files that have changed
+              id: changed-files-yaml
+              uses: tj-actions/changed-files@v45
+              with:
+                files_yaml: |
+                    moonbase:
+                    - 'runtime/moonbase/src/weights/**'
+                    moonriver:
+                    - 'runtime/moonriver/src/weights/**'
+                    moonbeam:
+                    - 'runtime/moonbeam/src/weights/**'
+
+            - name: Moonbase Report
+              if: steps.changed-files-yaml.outputs.moonbase_any_changed == 'true'  
+              run: |
+                echo "## Moonbase Weight Difference Report" >> weight_diff_report.md
+
+            - name: Moonriver Report
+              if: steps.changed-files-yaml.outputs.moonriver_any_changed == 'true'  
+              run: |
+                echo "## Moonriver Weight Difference Report" >> weight_diff_report.md
+            
+            - name: Moonbeam Report
+              if: steps.changed-files-yaml.outputs.moonbeam_any_changed == 'true'  
+              run: |
+                echo "## Moonbeam Weight Difference Report" >> weight_diff_report.md
+
+            - name: Find Comment
+              uses: peter-evans/find-comment@v3
+              id: fc
+              with:
+                issue-number: ${{ github.event.pull_request.number }}
+                comment-author: "github-actions[bot]"
+                body-includes: "Weight Difference Report"
+
+            - name: Create or update comment
+              uses: peter-evans/create-or-update-comment@v4
+              with:
+                comment-id: ${{ steps.fc.outputs.comment-id }}
+                issue-number: ${{ github.event.pull_request.number }}
+                body-path: weight_diff_report.md
+                edit-mode: replace
