@@ -52,7 +52,14 @@ jobs:
                 for file in ${ALL_CHANGED_FILES}; do
                   subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1d  >> weight_diff_moonbase.csv
                 done
-                jq -cR 'split(",")' weight_diff_moonbase.csv | jq -csf .github/scripts/csv2json.jq >> weight_diff_report.md
+                jq -cR 'split(",")' weight_diff_moonbase.csv | jq -csf .github/scripts/csv2json.jq > weight_diff_moonbase.json
+                jq 'map(. + {abs_change: (."Change Percent" | gsub("[^0-9.-]"; "") | tonumber | abs)}) | sort_by(.abs_change) | reverse | map(del(.abs_change))' weight_diff_moonbase.json > weight_diff_moonbase_sorted.json
+                jq -r '[
+                    "## Moonbase Weight Difference Report",
+                    "| File | Extrinsic | Old | New | Change [%] |",
+                    "|------|-----------|-----|-----|------------|",
+                    (.[] | "| \(.File) | \(.Extrinsic) | \(.Old) | \(.New) | \(.["Change Percent"]) |")
+                ] | .[]' weight_diff_moonbase_sorted.json >> weight_diff_report.md
 
             - name: Moonriver Report
               if: steps.changed-files-yaml.outputs.moonriver_any_changed == 'true'
