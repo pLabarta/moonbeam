@@ -61,9 +61,13 @@ jobs:
                   subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1,1d | sed '$d' >> moonbase_diffs.csv
                 done
 
-                echo "## Moonbase Weight Difference Summary" >> weight_diff_report.md
-                jq -R 'split(",") | {File: .[0], Extrinsic: .[1], Old: .[2], New: .[3], "Change Percent": (.[4] | tonumber)}' moonbase_diffs.csv | jq -s '.' > weight_diff_report.md
+                echo "## Moonbase Weight Difference JSON" >> weight_diff_report.md
+                jq -R 'split(",") | {File: .[0], Extrinsic: .[1], Old: .[2], New: .[3], "Change Percent": (.[4] | tonumber)}' moonbase_diffs.csv | jq -s '.' >> weight_diff_report.md
                 jq -R 'split(",") | {File: .[0], Extrinsic: .[1], Old: .[2], New: .[3], "Change Percent": (.[4] | tonumber)}' moonbase_diffs.csv | jq -s '.' > moonbase_diffs.json
+
+                echo "## Moonbase Weight Difference Sorted JSON" >> weight_diff_report.md
+                jq 'map(. + {abs_change: if ."Change Percent" < 0 then -."Change Percent" else ."Change Percent" end}) | sort_by(.abs_change) | reverse | map(del(.abs_change))' weight_diff_moonbase.json >> weight_diff_report.md
+                jq 'map(. + {abs_change: if ."Change Percent" < 0 then -."Change Percent" else ."Change Percent" end}) | sort_by(.abs_change) | reverse | map(del(.abs_change))' weight_diff_moonbase.json > weight_diff_moonbase_sorted.json
 
             - name: Find Comment
               uses: peter-evans/find-comment@v3
