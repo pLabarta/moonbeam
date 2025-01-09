@@ -48,31 +48,56 @@ jobs:
               env:
                 ALL_CHANGED_FILES: ${{ steps.changed-files-yaml.outputs.moonbase_all_changed_files }}
               run: |
-                echo "## Moonbase Weight Difference Files" >> weight_diff_report.md
-                for file in ${ALL_CHANGED_FILES}; do
-                  echo $file >> weight_diff_report.md
-                done
-
-                echo "## Moonbase Weight Difference Reports" >> weight_diff_report.md
-                for file in ${ALL_CHANGED_FILES}; do
-                  subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1,1d | sed '$d' >> weight_diff_report.md
-                done
                 for file in ${ALL_CHANGED_FILES}; do
                   subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1,1d | sed '$d' >> moonbase_diffs.csv
                 done
 
-                echo "## Moonbase Weight Difference JSON" >> weight_diff_report.md
-                jq -R 'split(",") | {File: .[0], Extrinsic: .[1], Old: .[2], New: .[3], "Change Percent": (.[4] | tonumber)}' moonbase_diffs.csv | jq -s '.' >> weight_diff_report.md
                 jq -R 'split(",") | {File: .[0], Extrinsic: .[1], Old: .[2], New: .[3], "Change Percent": (.[4] | tonumber)}' moonbase_diffs.csv | jq -s '.' > moonbase_diffs.json
 
-                echo "## Moonbase Weight Difference Sorted JSON" >> weight_diff_report.md
-                jq 'sort_by(.["Change Percent"] | abs ) | reverse' moonbase_diffs.json >> weight_diff_report.md
                 jq 'sort_by(.["Change Percent"] | abs ) | reverse' moonbase_diffs.json > moonbase_diffs_sorted.json
 
                 echo "## Moonbase Weight Difference Report" >> weight_diff_report.md
                 echo "| File | Extrinsic | Old | New | Change Percent |" >> weight_diff_report.md
                 echo "|------|-----------|-----|-----|----------------|" >> weight_diff_report.md
                 jq -r '.[] | "| \(.File) | \(.Extrinsic) | \(.Old) | \(.New) | \(.["Change Percent"])% |"' moonbase_diffs_sorted.json >> weight_diff_report.md
+
+            - name: Moonriver Weight Difference Data
+              if: steps.changed-files-yaml.outputs.moonriver_any_changed == 'true'
+              env:
+                ALL_CHANGED_FILES: ${{ steps.changed-files-yaml.outputs.moonriver_all_changed_files }}
+              run: |
+                for file in ${ALL_CHANGED_FILES}; do
+                  subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1,1d | sed '$d' >> moonriver_diffs.csv
+                done
+
+                jq -R 'split(",") | {File: .[0], Extrinsic: .[1], Old: .[2], New: .[3], "Change Percent": (.[4] | tonumber)}' moonriver_diffs.csv | jq -s '.' > moonriver_diffs.json
+
+                jq 'sort_by(.["Change Percent"] | abs ) | reverse' moonriver_diffs.json > moonriver_diffs_sorted.json
+
+                echo "## Moonriver Weight Difference Report" >> weight_diff_report.md
+                echo "| File | Extrinsic | Old | New | Change Percent |" >> weight_diff_report.md
+                echo "|------|-----------|-----|-----|----------------|" >> weight_diff_report.md
+                jq -r '.[] | "| \(.File) | \(.Extrinsic) | \(.Old) | \(.New) | \(.["Change Percent"])% |"' moonriver_diffs_sorted.json >> weight_diff_report.md
+
+            - name: Moonbeam Weight Difference Data
+              if: steps.changed-files-yaml.outputs.moonbeam_any_changed == 'true'
+              env:
+                ALL_CHANGED_FILES: ${{ steps.changed-files-yaml.outputs.moonbeam_all_changed_files }}
+              run: |
+                for file in ${ALL_CHANGED_FILES}; do
+                  subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1,1d | sed '$d' >> moonbeam_diffs.csv
+                done
+
+                jq -R 'split(",") | {File: .[0], Extrinsic: .[1], Old: .[2], New: .[3], "Change Percent": (.[4] | tonumber)}' moonbeam_diffs.csv | jq -s '.' > moonbeam_diffs.json
+
+                jq 'sort_by(.["Change Percent"] | abs ) | reverse' moonbeam_diffs.json > moonbeam_diffs_sorted.json
+
+                echo "## Moonbeam Weight Difference Report" >> weight_diff_report.md
+                echo "| File | Extrinsic | Old | New | Change Percent |" >> weight_diff_report.md
+                echo "|------|-----------|-----|-----|----------------|" >> weight_diff_report.md
+                jq -r '.[] | "| \(.File) | \(.Extrinsic) | \(.Old) | \(.New) | \(.["Change Percent"])% |"' moonbeam_diffs_sorted.json >> weight_diff_report.md
+
+
             - name: Find Comment
               uses: peter-evans/find-comment@v3
               id: fc
