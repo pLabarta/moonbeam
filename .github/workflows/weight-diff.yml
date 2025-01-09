@@ -55,7 +55,7 @@ jobs:
 
                 echo "## Moonbase Weight Difference Reports" >> weight_diff_report.md
                 for file in ${ALL_CHANGED_FILES}; do
-                  subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1d >> weight_diff_report.md
+                  subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1,1d | sed '$d' >> weight_diff_report.md
                 done
 
             - name: Find Comment
