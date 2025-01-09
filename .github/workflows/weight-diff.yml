@@ -50,7 +50,7 @@ jobs:
               run: |
                 echo "File,Extrinsic,Old,New,Change Percent" > weight_diff_moonbase.csv
                 for file in ${ALL_CHANGED_FILES}; do
-                  subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1d >> weight_diff_report.md
+                  $file >> weight_diff_report.md
                 done
 
             - name: Moonriver Report
