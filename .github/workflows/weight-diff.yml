@@ -50,7 +50,7 @@ jobs:
               run: |
                 echo "File,Extrinsic,Old,New,Change Percent" > weight_diff_moonbase.csv
                 for file in ${ALL_CHANGED_FILES}; do
-                  $file >> weight_diff_report.md
+                  echo $file >> weight_diff_report.md
                 done
 
             - name: Moonriver Report
