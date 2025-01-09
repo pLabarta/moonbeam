@@ -48,30 +48,14 @@ jobs:
               env:
                 ALL_CHANGED_FILES: ${{ steps.changed-files-yaml.outputs.moonbase_all_changed_files }}
               run: |
-                echo "File,Extrinsic,Old,New,Change Percent" > weight_diff_moonbase.csv
+                echo "## Moonbase Weight Difference Files" >> weight_diff_report.md
                 for file in ${ALL_CHANGED_FILES}; do
                   echo $file >> weight_diff_report.md
                 done
 
-            - name: Moonriver Report
-              if: steps.changed-files-yaml.outputs.moonriver_any_changed == 'true'
-              env:
-                ALL_CHANGED_FILES: ${{ steps.changed-files-yaml.outputs.moonriver_all_changed_files }}
-              run: |
-                echo "## Moonriver Weight Difference Report" >> weight_diff_report.md
-                export HEADER=1
+                echo "## Moonbase Weight Difference Reports" >> weight_diff_report.md
                 for file in ${ALL_CHANGED_FILES}; do
-                  subweight compare commits --no-color --format markdown --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} >> weight_diff_report.md
-                done
-            
-            - name: Moonbeam Report
-              if: steps.changed-files-yaml.outputs.moonbeam_any_changed == 'true'  
-              env:
-                ALL_CHANGED_FILES: ${{ steps.changed-files-yaml.outputs.moonbeam_all_changed_files }}
-              run: |
-                echo "## Moonbeam Weight Difference Report" >> weight_diff_report.md
-                for file in ${ALL_CHANGED_FILES}; do
-                  subweight compare commits --no-color --format markdown --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} >> weight_diff_report.md
+                  subweight compare commits --threshold 1 --strip-path-prefix ".*/" --format csv --no-color --method exact-worst --path-pattern $file ${{github.base_ref}} ${{github.head_ref}} | sed 1d >> weight_diff_report.md
                 done
 
             - name: Find Comment
