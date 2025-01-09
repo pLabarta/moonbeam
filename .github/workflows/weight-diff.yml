@@ -66,8 +66,8 @@ jobs:
                 jq -R 'split(",") | {File: .[0], Extrinsic: .[1], Old: .[2], New: .[3], "Change Percent": (.[4] | tonumber)}' moonbase_diffs.csv | jq -s '.' > moonbase_diffs.json
 
                 echo "## Moonbase Weight Difference Sorted JSON" >> weight_diff_report.md
-                jq 'sort_by(.["Change Percent"])' moonbase_diffs.json >> weight_diff_report.md
-                jq 'sort_by(.["Change Percent"])' moonbase_diffs.json > moonbase_diffs_sorted.json
+                jq 'sort_by(.["Change Percent"] | abs)' moonbase_diffs.json >> weight_diff_report.md
+                jq 'sort_by(.["Change Percent"] | abs)' moonbase_diffs.json > moonbase_diffs_sorted.json
             - name: Find Comment
               uses: peter-evans/find-comment@v3
               id: fc
